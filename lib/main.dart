@@ -7,8 +7,8 @@ void main() {
   runApp(const MyApp());
 }
 
+// AVD TO LOCALHOST
 const String baseUrl = 'http://10.0.2.2:8080/php-api-to-do-list';
-enum taskMenuItems { edit, delete }
 
 class User {
   User(
@@ -31,11 +31,11 @@ class User {
 }
 
 class Task {
-  final int id;
-  final int userId;
-  final String name;
-  final String date;
-  final int realized;
+  int id;
+  int userId;
+  String name;
+  String date;
+  int realized;
 
   Task(
     this.id,
@@ -80,6 +80,24 @@ class API {
       headers: requestHeaders,
       body: jsonEncode({
         "name": taskname,
+      }),
+    );
+  }
+
+  // UPDATE
+  static Future updateTask(Task task) async {
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Authorization': '123'
+    };
+
+    return await http.put(
+      Uri.parse('$baseUrl/api/task/update/'),
+      headers: requestHeaders,
+      body: jsonEncode({
+        "id": task.id,
+        "name": task.name,
+        "realized": task.realized,
       }),
     );
   }
@@ -158,7 +176,9 @@ class _TaskListState extends State<TaskList> {
   _taskList() {
     if (!isLoading) {
       return taskList.isEmpty
-          ? const Center(child: Text('Não há tarefas criadas'))
+          ? const Center(
+              child: Text('Não há tarefas criadas'),
+            )
           : ListView.separated(
               itemCount: taskList.length,
               physics: const BouncingScrollPhysics(),
@@ -175,45 +195,25 @@ class _TaskListState extends State<TaskList> {
 
   _taskTile(BuildContext context, index) {
     final task = taskList[index];
-    return Dismissible(
-      key: Key(task.id.toString()),
-      direction: DismissDirection.endToStart,
-      onDismissed: (direction) async {
-        var checkTemp = taskList[index];
-        setState(() {
-          taskList.removeAt(index);
-        });
+    return ListTile(
+      title: Text(task.name),
+      onTap: () async {
+        var update = await showDialog(
+          context: context,
+          builder: (_) => EditTaskDialog(task: task),
+        );
 
-        final response = await API.deleteTask(task.id);
-
-        var body = json.decode(response.body);
-
-        if (response.statusCode == 200 &&
-            body['message'] != 'Task deleted Successfully') {
-          setState(() {
-            taskList.add(checkTemp);
-          });
+        if (update != null && update) {
+          _getTaskList();
         }
       },
-      background: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        color: Colors.red,
-        alignment: Alignment.centerRight,
-        child: const Icon(
-          Icons.delete,
-          color: Colors.white,
-        ),
-      ),
-      child: ListTile(
-        title: Text(task.name),
-        leading: task.realized == 0
-            ? const Icon(Icons.check_box_outline_blank)
-            : const Icon(Icons.check_box_outlined),
-      ),
+      leading: task.realized == 0
+          ? const Icon(Icons.check_box_outline_blank)
+          : const Icon(Icons.check_box_outlined),
     );
   }
 
-  _saveTask() async {
+  _createTask() async {
     if (_newTaskFormKey.currentState!.validate()) {
       final response = await API.newTask(_newTaskName.text);
 
@@ -245,13 +245,16 @@ class _TaskListState extends State<TaskList> {
       ),
       actions: [
         TextButton(
-          child: const Text('Cancelar'),
+          child: const Text(
+            'Cancelar',
+            style: TextStyle(color: Colors.red),
+          ),
           onPressed: () {
             _newTaskName.clear();
-            Navigator.of(context).pop();
+            Navigator.pop(context, true);
           },
         ),
-        TextButton(child: const Text('Salvar'), onPressed: () => _saveTask()),
+        TextButton(child: const Text('Salvar'), onPressed: () => _createTask()),
       ],
       actionsAlignment: MainAxisAlignment.spaceAround,
     );
@@ -276,6 +279,116 @@ class _TaskListState extends State<TaskList> {
           : null,
       body: _taskList(),
     );
+  }
+}
+
+class EditTaskDialog extends StatefulWidget {
+  const EditTaskDialog({Key? key, required this.task}) : super(key: key);
+
+  final Task task;
+
+  @override
+  _EditTaskDialogState createState() => _EditTaskDialogState();
+}
+
+class _EditTaskDialogState extends State<EditTaskDialog> {
+  final _editTaskFormKey = GlobalKey<FormState>();
+  final TextEditingController _taskName = TextEditingController();
+
+  bool isCompleted = false;
+
+  _saveTask(Task task) async {
+    if (_editTaskFormKey.currentState!.validate()) {
+      Task newData = task;
+
+      newData.name = _taskName.text;
+      newData.realized = isCompleted ? 1 : 0;
+
+      final response = await API.updateTask(newData);
+      if (response.statusCode == 200) {
+        _taskName.clear();
+        Navigator.pop(context, true);
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    isCompleted = widget.task.realized == 0 ? false : true;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
+
+    setState(() {
+      _taskName.text = task.name;
+    });
+
+    return AlertDialog(
+      title: const Text('Editar Tarefa'),
+      content: Form(
+        key: _editTaskFormKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _taskName,
+              decoration: const InputDecoration(
+                label: Text('Título'),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Preencha o título da tarefa';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(
+              height: 18.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Tarefa concluída'),
+                Switch(
+                  value: isCompleted,
+                  onChanged: _changeSwitch,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: const Text(
+            'Excluir',
+            style: TextStyle(color: Colors.red),
+          ),
+          onPressed: () async {
+            final response = await API.deleteTask(task.id);
+
+            var body = json.decode(response.body);
+
+            if (response.statusCode == 200 &&
+                body['message'] == 'Task deleted Successfully') {
+              Navigator.pop(context, true);
+            }
+          },
+        ),
+        TextButton(
+            child: const Text('Salvar'), onPressed: () => _saveTask(task)),
+      ],
+      actionsAlignment: MainAxisAlignment.spaceAround,
+    );
+  }
+
+  void _changeSwitch(bool value) {
+    setState(() {
+      isCompleted = value;
+    });
   }
 }
 
@@ -306,11 +419,7 @@ class _UserProfileState extends State<UserProfile> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [],
-        ),
-      ),
+      body: Container(),
     );
   }
 }
