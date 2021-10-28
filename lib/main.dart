@@ -11,56 +11,121 @@ void main() {
 const String baseUrl = 'http://10.0.2.2:8080/php-api-to-do-list';
 
 class User {
-  User(
-    this.id,
+  User({
     this.name,
     this.email,
+    this.password,
+    this.id,
+    this.username,
     this.token,
-  );
+  });
 
-  final int id;
-  final String name;
-  final String email;
-  final String token;
+  int? id;
+  String? name;
+  String? email;
+  String? username;
+  String? password;
+  String? token;
 
-  User.fromJson(Map json)
-      : id = json['id'],
-        name = json['name'],
-        email = json['email'],
-        token = json['token'];
+  factory User.fromJson(Map<String, dynamic> json) => User(
+        id: json["id"],
+        name: json["name"],
+        email: json["email"],
+        username: json["username"],
+        password: json["password"],
+        token: json["token"],
+      );
 }
 
 class Task {
-  int id;
-  int userId;
-  String name;
-  String date;
-  int realized;
+  final int id;
+  final int userId;
+  final String name;
+  final DateTime date;
+  final int realized;
 
-  Task(
-    this.id,
-    this.userId,
-    this.name,
-    this.date,
-    this.realized,
-  );
+  Task({
+    required this.id,
+    required this.userId,
+    required this.name,
+    required this.date,
+    required this.realized,
+  });
 
-  Task.fromJson(Map json)
-      : id = json['id'],
-        userId = json['userId'],
-        name = json['name'],
-        date = json['date'],
-        realized = json['realized'];
+  factory Task.fromJson(Map<String, dynamic> json) => Task(
+        id: json["id"] as int,
+        userId: json["userId"] as int,
+        name: json["name"] as String,
+        date: DateTime.parse(json["date"]),
+        realized: json["realized"] as int,
+      );
 }
 
+User currentUser = User();
+
 class API {
-  // TASKS
+  // --- USER ---
+
+  // LOGIN
+  static Future login(String username, String password) async {
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+    };
+
+    return await http.post(
+      Uri.parse('$baseUrl/api/user/login/'),
+      headers: requestHeaders,
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+      }),
+    );
+  }
+
+  // NEW
+  static Future newUser(String username, String password) async {
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+    };
+
+    return await http.post(
+      Uri.parse('$baseUrl/api/user/new/'),
+      headers: requestHeaders,
+      body: jsonEncode({
+        "name": "name",
+        "email": "email",
+        "username": "username",
+        "password": "password"
+      }),
+    );
+  }
+
+  // UPDATE
+  static Future updateUser(User user) async {
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Authorization': currentUser.token!
+    };
+
+    return await http.put(
+      Uri.parse('$baseUrl/api/task/update/'),
+      headers: requestHeaders,
+      body: jsonEncode({
+        "name": user.name,
+        "email": user.email,
+        "username": user.username,
+        "password": user.password
+      }),
+    );
+  }
+
+  // --- TASKS ---
 
   // SEARCH
   static Future getTasks() async {
     Map<String, String> requestHeaders = {
       'Content-type': 'application/json',
-      'Authorization': '123'
+      'Authorization': currentUser.token.toString()
     };
 
     return await http.post(
@@ -73,7 +138,7 @@ class API {
   static Future newTask(String taskname) async {
     Map<String, String> requestHeaders = {
       'Content-type': 'application/json',
-      'Authorization': '123'
+      'Authorization': currentUser.token!
     };
     return await http.post(
       Uri.parse('$baseUrl/api/task/new/'),
@@ -88,7 +153,7 @@ class API {
   static Future updateTask(Task task) async {
     Map<String, String> requestHeaders = {
       'Content-type': 'application/json',
-      'Authorization': '123'
+      'Authorization': currentUser.token!
     };
 
     return await http.put(
@@ -106,7 +171,7 @@ class API {
   static Future deleteTask(int taskId) async {
     Map<String, String> requestHeaders = {
       'Content-type': 'application/json',
-      'Authorization': '123'
+      'Authorization': currentUser.token!
     };
     return await http.delete(
       Uri.parse('$baseUrl/api/task/delete/'),
@@ -132,7 +197,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const TaskList(),
+      home: currentUser.token == null ? const SignIn() : const TaskList(),
     );
   }
 }
@@ -162,11 +227,12 @@ class _TaskListState extends State<TaskList> {
 
     API.getTasks().then((response) {
       if (response.statusCode == 200) {
-        var body = json.decode(response.body);
+        final parsed = jsonDecode(response.body).cast<Map<String, dynamic>>();
+
         setState(() {
-          taskList = body[0] == null
+          taskList = parsed[0] == null
               ? []
-              : body.map((model) => Task.fromJson(model)).toList();
+              : parsed.map<Task>((json) => Task.fromJson(json)).toList();
           isLoading = false;
         });
       }
@@ -266,6 +332,56 @@ class _TaskListState extends State<TaskList> {
       appBar: AppBar(
         title: const Text('Tarefas'),
       ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(currentUser.name!),
+              accountEmail: Text(currentUser.email!),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Text(
+                  currentUser.name![0].toUpperCase(),
+                  style: const TextStyle(fontSize: 32.0),
+                ),
+                radius: 50.0,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ListTile(
+                    title: const Text('Meu Perfil'),
+                    leading: const Icon(Icons.person),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UserProfile(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('Sair'),
+                    leading: const Icon(Icons.logout),
+                    onTap: () {
+                      currentUser = User();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignIn(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: !isLoading
           ? FloatingActionButton(
               child: const Icon(Icons.add),
@@ -299,11 +415,13 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
 
   _saveTask(Task task) async {
     if (_editTaskFormKey.currentState!.validate()) {
-      Task newData = task;
-
-      newData.name = _taskName.text;
-      newData.realized = isCompleted ? 1 : 0;
-
+      Task newData = Task(
+        id: task.id,
+        userId: task.userId,
+        name: _taskName.text,
+        date: task.date,
+        realized: isCompleted ? 1 : 0,
+      );
       final response = await API.updateTask(newData);
       if (response.statusCode == 200) {
         _taskName.clear();
@@ -389,6 +507,246 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
     setState(() {
       isCompleted = value;
     });
+  }
+}
+
+class SignIn extends StatefulWidget {
+  const SignIn({Key? key}) : super(key: key);
+
+  @override
+  _SignInState createState() => _SignInState();
+}
+
+class _SignInState extends State<SignIn> {
+  final _loginFormKey = GlobalKey<FormState>();
+  final TextEditingController _username = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+
+  _login() async {
+    if (_loginFormKey.currentState!.validate()) {
+      final response = await API.login(_username.text, _password.text);
+      final parsed = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && parsed['message'] == null) {
+        currentUser = User.fromJson(parsed);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TaskList(),
+          ),
+        );
+      } else {
+        final snackBar = SnackBar(
+          content: Text(parsed['message']),
+        );
+
+        // Find the ScaffoldMessenger in the widget tree
+        // and use it to show a SnackBar.
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          height: MediaQuery.of(context).size.height,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Column(
+                children: [
+                  Icon(
+                    Icons.check_circle_sharp,
+                    size: (MediaQuery.of(context).size.width / 3),
+                  ),
+                  const Text(
+                    'To-do',
+                    style: TextStyle(fontSize: 32.0),
+                  )
+                ],
+              ),
+              Form(
+                key: _loginFormKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _username,
+                      decoration: const InputDecoration(
+                        label: Text('Usuário'),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.name,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Preencha o campo "Usuário"';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(
+                      height: 16.0,
+                    ),
+                    TextFormField(
+                      controller: _password,
+                      decoration: const InputDecoration(
+                        label: Text('Senha'),
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Preencha o campo "Senha"';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(
+                      height: 32.0,
+                    ),
+                    ElevatedButton(
+                      child: const Text('Entrar'),
+                      onPressed: () {
+                        _login();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Não tem uma conta?'),
+                  TextButton(
+                    child: const Text(
+                      'Cadastre-se',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignUp(),
+                        ),
+                      );
+                    },
+                  )
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SignUp extends StatefulWidget {
+  const SignUp({Key? key}) : super(key: key);
+
+  @override
+  _SignUpState createState() => _SignUpState();
+}
+
+class _SignUpState extends State<SignUp> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Cadastro'),
+        foregroundColor: Colors.black,
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(16.0),
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          child: Form(
+            child: Column(
+              children: [
+                TextFormField(
+                  decoration: const InputDecoration(
+                    label: Text('Nome'),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.name,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Preencha o campo "Nome"';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(
+                  height: 16.0,
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    label: Text('Usuário'),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.name,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Preencha o campo "Usuário"';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(
+                  height: 16.0,
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    label: Text('E-mail'),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Preencha o campo "E-mail"';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(
+                  height: 16.0,
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    label: Text('Senha'),
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Preencha o campo "Senha"';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(
+                  height: 32.0,
+                ),
+                ElevatedButton(
+                  child: const Text('Cadastrar'),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
