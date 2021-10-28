@@ -1,16 +1,15 @@
-# to_do_list
+<h1 align="center">To-Do List</h1>
 
-A new Flutter project.
+## About The Project
 
-## Getting Started
+A simple To-Do list app made in class oriented by the professor [Edson M. de Souza](https://github.com/EdsonMSouza)
 
-This project is a starting point for a Flutter application.
+### Back-end
 
-A few resources to get you started if this is your first Flutter project:
+### Built With
+* [Flutter](http://flutter.dev/)
+* [PHP API](https://github.com/EdsonMSouza/php-api-to-do-list) by [Edson M. de Souza](https://github.com/EdsonMSouza)
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## Acknowledgements
+* [Edson M. de Souza](https://github.com/EdsonMSouza)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
