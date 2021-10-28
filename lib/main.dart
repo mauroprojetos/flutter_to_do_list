@@ -83,7 +83,7 @@ class API {
   }
 
   // NEW
-  static Future newUser(String username, String password) async {
+  static Future newUser(User user) async {
     Map<String, String> requestHeaders = {
       'Content-type': 'application/json',
     };
@@ -92,10 +92,10 @@ class API {
       Uri.parse('$baseUrl/api/user/new/'),
       headers: requestHeaders,
       body: jsonEncode({
-        "name": "name",
-        "email": "email",
-        "username": "username",
-        "password": "password"
+        "name": user.name,
+        "email": user.email,
+        "username": user.username,
+        "password": user.password
       }),
     );
   }
@@ -108,7 +108,7 @@ class API {
     };
 
     return await http.put(
-      Uri.parse('$baseUrl/api/task/update/'),
+      Uri.parse('$baseUrl/api/user/update/'),
       headers: requestHeaders,
       body: jsonEncode({
         "name": user.name,
@@ -227,14 +227,20 @@ class _TaskListState extends State<TaskList> {
 
     API.getTasks().then((response) {
       if (response.statusCode == 200) {
-        final parsed = jsonDecode(response.body).cast<Map<String, dynamic>>();
+        final body = jsonDecode(response.body);
 
-        setState(() {
-          taskList = parsed[0] == null
-              ? []
-              : parsed.map<Task>((json) => Task.fromJson(json)).toList();
-          isLoading = false;
-        });
+        try {
+          final parsed = body.cast<Map<String, dynamic>>();
+          setState(() {
+            taskList = parsed.map<Task>((json) => Task.fromJson(json)).toList();
+            isLoading = false;
+          });
+        } catch (e) {
+          setState(() {
+            taskList = [];
+            isLoading = false;
+          });
+        }
       }
     });
   }
@@ -529,6 +535,9 @@ class _SignInState extends State<SignIn> {
 
       if (response.statusCode == 200 && parsed['message'] == null) {
         currentUser = User.fromJson(parsed);
+        currentUser.username = _username.text;
+        currentUser.password = _password.text;
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -540,8 +549,6 @@ class _SignInState extends State<SignIn> {
           content: Text(parsed['message']),
         );
 
-        // Find the ScaffoldMessenger in the widget tree
-        // and use it to show a SnackBar.
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }
@@ -655,6 +662,43 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  final _signupFormKey = GlobalKey<FormState>();
+  final TextEditingController _name = TextEditingController();
+  final TextEditingController _username = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+
+  _signup() async {
+    if (_signupFormKey.currentState!.validate()) {
+      User newUser = User(
+        name: _name.text,
+        username: _username.text,
+        email: _email.text,
+        password: _password.text,
+      );
+
+      final response = await API.newUser(newUser);
+      final parsed = jsonDecode(response.body);
+
+      if (response.statusCode == 200 &&
+          parsed['message'] == 'User Successfully Added') {
+        currentUser = User.fromJson(parsed);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SignIn(),
+          ),
+        );
+      } else {
+        final snackBar = SnackBar(
+          content: Text(parsed['message']),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -671,9 +715,11 @@ class _SignUpState extends State<SignUp> {
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           child: Form(
+            key: _signupFormKey,
             child: Column(
               children: [
                 TextFormField(
+                  controller: _name,
                   decoration: const InputDecoration(
                     label: Text('Nome'),
                     border: OutlineInputBorder(),
@@ -690,6 +736,7 @@ class _SignUpState extends State<SignUp> {
                   height: 16.0,
                 ),
                 TextFormField(
+                  controller: _username,
                   decoration: const InputDecoration(
                     label: Text('Usuário'),
                     border: OutlineInputBorder(),
@@ -706,6 +753,7 @@ class _SignUpState extends State<SignUp> {
                   height: 16.0,
                 ),
                 TextFormField(
+                  controller: _email,
                   decoration: const InputDecoration(
                     label: Text('E-mail'),
                     border: OutlineInputBorder(),
@@ -722,6 +770,7 @@ class _SignUpState extends State<SignUp> {
                   height: 16.0,
                 ),
                 TextFormField(
+                  controller: _password,
                   decoration: const InputDecoration(
                     label: Text('Senha'),
                     border: OutlineInputBorder(),
@@ -739,7 +788,7 @@ class _SignUpState extends State<SignUp> {
                 ),
                 ElevatedButton(
                   child: const Text('Cadastrar'),
-                  onPressed: () {},
+                  onPressed: () => _signup(),
                 ),
               ],
             ),
@@ -758,6 +807,52 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
+  final _userEditFormKey = GlobalKey<FormState>();
+  final TextEditingController _name = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+
+  _editUser() async {
+    if (_userEditFormKey.currentState!.validate()) {
+      User newUserData = User(
+        name: _name.text,
+        email: _email.text,
+        username: currentUser.username,
+        password: currentUser.password,
+      );
+
+      final response = await API.updateUser(newUserData);
+      final parsed = jsonDecode(response.body);
+
+      if (response.statusCode == 200 &&
+          parsed['message'] == 'User Successfully Updated') {
+        setState(() {
+          currentUser.name = newUserData.name;
+          currentUser.email = newUserData.email;
+        });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TaskList(),
+          ),
+        );
+      } else {
+        final snackBar = SnackBar(
+          content: Text(parsed['message']),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    _name.text = currentUser.name!;
+    _email.text = currentUser.email!;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -771,13 +866,59 @@ class _UserProfileState extends State<UserProfile> {
                 color: Colors.white,
               ),
             ),
-            onPressed: () {
-              print('test');
-            },
+            onPressed: () => _editUser(),
           )
         ],
       ),
-      body: Container(),
+      body: SingleChildScrollView(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(16.0),
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          child: Form(
+            key: _userEditFormKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _name,
+                  decoration: const InputDecoration(
+                    label: Text('Nome'),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.name,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Preencha o campo "Nome"';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(
+                  height: 16.0,
+                ),
+                TextFormField(
+                  controller: _email,
+                  decoration: const InputDecoration(
+                    label: Text('E-mail'),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Preencha o campo "E-mail"';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(
+                  height: 32.0,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
