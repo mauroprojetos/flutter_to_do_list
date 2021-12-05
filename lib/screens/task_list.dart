@@ -7,6 +7,7 @@ import 'package:to_do_list/screens/signin.dart';
 import 'package:to_do_list/screens/user_profile.dart';
 import 'package:to_do_list/util/services/api.dart';
 import 'package:to_do_list/widgets/edit_task_dialog.dart';
+import 'package:to_do_list/widgets/new_task_dialog.dart';
 
 class TaskList extends StatefulWidget {
   const TaskList({Key? key}) : super(key: key);
@@ -18,9 +19,6 @@ class TaskList extends StatefulWidget {
 class _TaskListState extends State<TaskList> {
   bool isLoading = true;
   List taskList = [];
-
-  final _newTaskFormKey = GlobalKey<FormState>();
-  final TextEditingController _newTaskName = TextEditingController();
 
   @override
   void initState() {
@@ -91,53 +89,6 @@ class _TaskListState extends State<TaskList> {
     );
   }
 
-  _createTask() async {
-    if (_newTaskFormKey.currentState!.validate()) {
-      final response = await API.newTask(_newTaskName.text);
-
-      if (response.statusCode == 200) {
-        _newTaskName.clear();
-        Navigator.pop(context, true);
-        _getTaskList();
-      }
-    }
-  }
-
-  _newTaskDialog() {
-    return AlertDialog(
-      title: const Text('Nova Tarefa'),
-      content: Form(
-        key: _newTaskFormKey,
-        child: TextFormField(
-          controller: _newTaskName,
-          decoration: const InputDecoration(
-            label: Text('Título'),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Preencha o título da tarefa';
-            }
-            return null;
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: const Text(
-            'Cancelar',
-            style: TextStyle(color: Colors.red),
-          ),
-          onPressed: () {
-            _newTaskName.clear();
-            Navigator.pop(context, true);
-          },
-        ),
-        TextButton(child: const Text('Salvar'), onPressed: () => _createTask()),
-      ],
-      actionsAlignment: MainAxisAlignment.spaceAround,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,11 +148,17 @@ class _TaskListState extends State<TaskList> {
       floatingActionButton: !isLoading
           ? FloatingActionButton(
               child: const Icon(Icons.add),
-              onPressed: () {
-                showDialog(
+              onPressed: () async {
+                final result = await showDialog(
                   context: context,
-                  builder: (context) => _newTaskDialog(),
+                  builder: (context) {
+                    return const NewTaskDialog();
+                  },
                 );
+
+                if (result) {
+                  _getTaskList();
+                }
               },
             )
           : null,
