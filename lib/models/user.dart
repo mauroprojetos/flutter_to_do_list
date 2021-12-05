@@ -1,12 +1,12 @@
 class User {
-  User({
-    this.name,
-    this.email,
-    this.password,
-    this.id,
-    this.username,
-    this.token,
-  });
+  User(
+      {this.name,
+      this.email,
+      this.password,
+      this.id,
+      this.username,
+      this.token,
+      this.picture});
 
   int? id;
   String? name;
@@ -14,6 +14,7 @@ class User {
   String? username;
   String? password;
   String? token;
+  String? picture;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
         id: json["id"],
@@ -22,6 +23,7 @@ class User {
         username: json["username"],
         password: json["password"],
         token: json["token"],
+        picture: json["picture"],
       );
 }
 

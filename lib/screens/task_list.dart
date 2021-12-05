@@ -2,10 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/task.dart';
-import 'package:to_do_list/models/user.dart';
-import 'package:to_do_list/screens/signin.dart';
-import 'package:to_do_list/screens/user_profile.dart';
 import 'package:to_do_list/util/services/api.dart';
+import 'package:to_do_list/widgets/custom_drawer.dart';
 import 'package:to_do_list/widgets/edit_task_dialog.dart';
 import 'package:to_do_list/widgets/new_task_dialog.dart';
 
@@ -95,56 +93,7 @@ class _TaskListState extends State<TaskList> {
       appBar: AppBar(
         title: const Text('Tarefas'),
       ),
-      drawer: Drawer(
-        child: Column(
-          children: [
-            UserAccountsDrawerHeader(
-              accountName: Text(currentUser.name!),
-              accountEmail: Text(currentUser.email!),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Text(
-                  currentUser.name![0].toUpperCase(),
-                  style: const TextStyle(fontSize: 32.0),
-                ),
-                radius: 50.0,
-              ),
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ListTile(
-                    title: const Text('Meu Perfil'),
-                    leading: const Icon(Icons.person),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UserProfile(),
-                        ),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    title: const Text('Sair'),
-                    leading: const Icon(Icons.logout),
-                    onTap: () {
-                      currentUser = User();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignIn(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      drawer: const CustomDrawer(),
       floatingActionButton: !isLoading
           ? FloatingActionButton(
               child: const Icon(Icons.add),
