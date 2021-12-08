@@ -27,9 +27,9 @@ class _TaskListState extends State<TaskList> {
   _getTaskList() {
     isLoading = true;
 
-    API.getTasks().then((response) {
+    API.getTasks().then((response) async {
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
+        var body = jsonDecode(await response.transform(utf8.decoder).join());
 
         try {
           final parsed = body.cast<Map<String, dynamic>>();

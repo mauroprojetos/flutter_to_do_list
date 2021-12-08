@@ -92,14 +92,15 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             style: TextStyle(color: Colors.red),
           ),
           onPressed: () async {
-            final response = await API.deleteTask(task.id);
+            await API.deleteTask(task.id).then((response) async {
+              var body =
+                  jsonDecode(await response.transform(utf8.decoder).join());
 
-            var body = json.decode(response.body);
-
-            if (response.statusCode == 200 &&
-                body['message'] == 'Task deleted Successfully') {
-              Navigator.pop(context, true);
-            }
+              if (response.statusCode == 200 &&
+                  body['message'] == 'Task deleted Successfully') {
+                Navigator.pop(context, true);
+              }
+            });
           },
         ),
         TextButton(

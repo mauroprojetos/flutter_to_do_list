@@ -6,6 +6,7 @@ import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/task_list.dart';
 import 'package:to_do_list/util/services/api.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({Key? key}) : super(key: key);
@@ -19,12 +20,8 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _name = TextEditingController();
   final TextEditingController _email = TextEditingController();
 
-  List<XFile>? _imageFileList;
+  File? _imageFile;
   dynamic _pickImageError;
-
-  set _imageFile(XFile? value) {
-    _imageFileList = value == null ? null : [value];
-  }
 
   final ImagePicker _picker = ImagePicker();
 
@@ -35,9 +32,7 @@ class _UserProfileState extends State<UserProfile> {
       );
 
       if (pickedFile != null) {
-        setState(() {
-          _imageFile = pickedFile;
-        });
+        _cropImage(File(pickedFile.path));
       }
     } catch (e) {
       setState(() {
@@ -87,11 +82,36 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
+  Future<void> _cropImage(File file) async {
+    File? croppedFile = await ImageCropper.cropImage(
+        sourcePath: file.path,
+        maxHeight: 150,
+        maxWidth: 150,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        androidUiSettings: AndroidUiSettings(
+            toolbarTitle: 'Recortar',
+            toolbarColor: Theme.of(context).primaryColor,
+            toolbarWidgetColor: Colors.white,
+            lockAspectRatio: true,
+            activeControlsWidgetColor: Theme.of(context).primaryColor),
+        iosUiSettings: const IOSUiSettings(
+          title: 'Recortar',
+        ));
+
+    if (croppedFile!.path.isNotEmpty) {
+      setState(() {
+        _imageFile = croppedFile;
+      });
+    }
+  }
+
   _editUser() async {
     if (_userEditFormKey.currentState!.validate()) {
-      String base64 = base64Encode(
-        File(_imageFileList![0].path).readAsBytesSync(),
-      );
+      String? base64 = _imageFile != null
+          ? base64Encode(
+              File(_imageFile!.path).readAsBytesSync(),
+            )
+          : currentUser.picture!;
 
       User newUserData = User(
         name: _name.text,
@@ -101,30 +121,31 @@ class _UserProfileState extends State<UserProfile> {
         picture: base64,
       );
 
-      final response = await API.updateUser(newUserData);
-      final parsed = jsonDecode(response.body);
+      await API.updateUser(newUserData).then((response) async {
+        var body = jsonDecode(await response.transform(utf8.decoder).join());
 
-      if (response.statusCode == 200 &&
-          parsed['message'] == 'User Successfully Updated') {
-        setState(() {
-          currentUser.name = newUserData.name;
-          currentUser.email = newUserData.email;
-          currentUser.picture = newUserData.picture;
-        });
+        if (response.statusCode == 200 &&
+            body['message'] == 'User Successfully Updated') {
+          setState(() {
+            currentUser.name = newUserData.name;
+            currentUser.email = newUserData.email;
+            currentUser.picture = newUserData.picture;
+          });
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const TaskList(),
-          ),
-        );
-      } else {
-        final snackBar = SnackBar(
-          content: Text(parsed['message']),
-        );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TaskList(),
+            ),
+          );
+        } else {
+          final snackBar = SnackBar(
+            content: Text(body['message']),
+          );
 
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
+      });
     }
   }
 
@@ -170,18 +191,53 @@ class _UserProfileState extends State<UserProfile> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
-                      child: _imageFileList == null
-                          ? Icon(
-                              Icons.add_a_photo,
-                              size: 64.0,
-                              color: Theme.of(context).primaryColor,
-                            )
+                      child: currentUser.picture == null
+                          ? _imageFile != null
+                              ? Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(20.0),
+                                      child: Image.file(
+                                        File(_imageFile!.path),
+                                        height: 150.0,
+                                        width: 150.0,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 102,
+                                      child: Container(
+                                        height: 48.0,
+                                        width: 48.0,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).primaryColor,
+                                          shape: BoxShape.rectangle,
+                                          borderRadius:
+                                              BorderRadius.circular(20.0),
+                                        ),
+                                        child: const Icon(
+                                          Icons.photo,
+                                          size: 32.0,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                )
+                              : Icon(
+                                  Icons.add_a_photo,
+                                  size: 64.0,
+                                  color: Theme.of(context).primaryColor,
+                                )
                           : Stack(
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(20.0),
-                                  child: Image.file(
-                                    File(_imageFileList![0].path),
+                                  child: Image.memory(
+                                    base64Decode(
+                                      currentUser.picture!.toString(),
+                                    ),
                                     height: 150.0,
                                     width: 150.0,
                                     fit: BoxFit.cover,

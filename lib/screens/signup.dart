@@ -28,33 +28,33 @@ class _SignUpState extends State<SignUp> {
         password: _password.text,
       );
 
-      final response = await API.newUser(newUser);
+      await API.newUser(newUser).then((response) async {
+        if (response.statusCode == 200) {
+          var body = jsonDecode(await response.transform(utf8.decoder).join());
 
-      if (response.statusCode == 200) {
-        final parsed = jsonDecode(response.body);
+          if (body['message'] == 'User Successfully Added') {
+            currentUser = User.fromJson(body);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SignIn(),
+              ),
+            );
+          } else {
+            final snackBar = SnackBar(
+              content: Text(body['message']),
+            );
 
-        if (parsed['message'] == 'User Successfully Added') {
-          currentUser = User.fromJson(parsed);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SignIn(),
-            ),
-          );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
         } else {
-          final snackBar = SnackBar(
-            content: Text(parsed['message']),
+          const snackBar = SnackBar(
+            content: Text('Serviço indisponível'),
           );
 
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
         }
-      } else {
-        const snackBar = SnackBar(
-          content: Text('Serviço indisponível'),
-        );
-
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
+      });
     }
   }
 

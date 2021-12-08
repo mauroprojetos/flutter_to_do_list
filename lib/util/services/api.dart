@@ -1,127 +1,197 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:http/http.dart' as http;
 import 'package:to_do_list/constants/app_constants.dart';
 import 'package:to_do_list/models/task.dart';
 import 'package:to_do_list/models/user.dart';
 
 class API {
-  // --- USER ---
-
   // LOGIN
   static Future login(String username, String password) async {
-    Map<String, String> requestHeaders = {
-      'Content-type': 'application/json',
-    };
-
-    return await http.post(
-      Uri.parse('${BaseUrl().avdToLocalhost}/api/user/login/'),
-      headers: requestHeaders,
-      body: jsonEncode({
+    final client = HttpClient();
+    return await client
+        .postUrl(Uri.parse('$baseUrl/api/user/login/'))
+        .then((HttpClientRequest request) async {
+      request.headers.add(
+        'Content-type',
+        'application/json',
+        preserveHeaderCase: true,
+      );
+      final body = jsonEncode({
         'username': username,
         'password': password,
-      }),
-    );
+      });
+
+      request.write(body);
+      return request.close();
+    });
   }
 
   // NEW
   static Future newUser(User user) async {
-    Map<String, String> requestHeaders = {
-      'Content-type': 'application/json',
-    };
+    // Map<String, String> requestHeaders = {
+    //   'Content-type': 'application/json',
+    // };
 
-    return await http.post(
-      Uri.parse('${BaseUrl().avdToLocalhost}/api/user/new/'),
-      headers: requestHeaders,
-      body: jsonEncode({
+    // return await http.post(
+    //   Uri.parse('$baseUrl/api/user/new/'),
+    //   headers: requestHeaders,
+    //   body: jsonEncode({
+    //     "name": user.name,
+    //     "email": user.email,
+    //     "username": user.username,
+    //     "password": user.password
+    //   }),
+    // );
+
+    final client = HttpClient();
+    return await client
+        .postUrl(Uri.parse('$baseUrl/api/user/new/'))
+        .then((HttpClientRequest request) async {
+      request.headers.add(
+        'Content-type',
+        'application/json',
+        preserveHeaderCase: true,
+      );
+      final body = jsonEncode({
         "name": user.name,
         "email": user.email,
         "username": user.username,
         "password": user.password
-      }),
-    );
+      });
+
+      request.write(body);
+      return request.close();
+    });
   }
 
   // UPDATE
   static Future updateUser(User user) async {
-    Map<String, String> requestHeaders = {
-      'Content-type': 'application/json',
-      'Authorization': currentUser.token!
-    };
-
-    return await http.put(
-      Uri.parse('${BaseUrl().avdToLocalhost}/api/user/update/'),
-      headers: requestHeaders,
-      body: jsonEncode({
+    final client = HttpClient();
+    return await client
+        .putUrl(Uri.parse('$baseUrl/api/user/update/'))
+        .then((HttpClientRequest request) async {
+      request.headers.add(
+        'Content-type',
+        'application/json',
+        preserveHeaderCase: true,
+      );
+      request.headers.add(
+        'Authorization',
+        currentUser.token.toString(),
+        preserveHeaderCase: true,
+      );
+      final body = jsonEncode({
         "name": user.name,
         "email": user.email,
         "username": user.username,
         "password": user.password,
         "picture": user.picture,
-      }),
-    );
+      });
+
+      request.write(body);
+      return request.close();
+    });
   }
 
   // --- TASKS ---
 
   // SEARCH
   static Future getTasks() async {
-    Map<String, String> requestHeaders = {
-      'Content-type': 'application/json',
-      'Authorization': currentUser.token.toString()
-    };
+    final client = HttpClient();
 
-    return await http.post(
-      Uri.parse('${BaseUrl().avdToLocalhost}/api/task/search/'),
-      headers: requestHeaders,
-    );
+    return await client
+        .postUrl(Uri.parse('$baseUrl/api/task/search/'))
+        .then((HttpClientRequest request) async {
+      request.headers.add(
+        'Content-type',
+        'application/json',
+        preserveHeaderCase: true,
+      );
+      request.headers.add(
+        'Authorization',
+        currentUser.token.toString(),
+        preserveHeaderCase: true,
+      );
+
+      return request.close();
+    });
   }
 
   // NEW
   static Future newTask(String taskname) async {
-    Map<String, String> requestHeaders = {
-      'content-type': 'application/json',
-      'Authorization': currentUser.token.toString()
-    };
-    return await http.post(
-      Uri.parse('${BaseUrl().avdToLocalhost}/api/task/new/'),
-      headers: requestHeaders,
-      body: jsonEncode({
+    final client = HttpClient();
+    return await client
+        .postUrl(Uri.parse('$baseUrl/api/task/new/'))
+        .then((HttpClientRequest request) async {
+      request.headers.add(
+        'Content-type',
+        'application/json',
+        preserveHeaderCase: true,
+      );
+      request.headers.add(
+        'Authorization',
+        currentUser.token.toString(),
+        preserveHeaderCase: true,
+      );
+      final body = jsonEncode({
         "name": taskname,
-      }),
-    );
+      });
+
+      request.write(body);
+      return request.close();
+    });
   }
 
   // UPDATE
   static Future updateTask(Task task) async {
-    Map<String, String> requestHeaders = {
-      'Content-type': 'application/json',
-      'Authorization': currentUser.token!
-    };
-
-    return await http.put(
-      Uri.parse('${BaseUrl().avdToLocalhost}/api/task/update/'),
-      headers: requestHeaders,
-      body: jsonEncode({
+    final client = HttpClient();
+    return await client
+        .putUrl(Uri.parse('$baseUrl/api/task/update/'))
+        .then((HttpClientRequest request) async {
+      request.headers.add(
+        'Content-type',
+        'application/json',
+        preserveHeaderCase: true,
+      );
+      request.headers.add(
+        'Authorization',
+        currentUser.token.toString(),
+        preserveHeaderCase: true,
+      );
+      final body = jsonEncode({
         "id": task.id,
         "name": task.name,
         "realized": task.realized,
-      }),
-    );
+      });
+
+      request.write(body);
+      return request.close();
+    });
   }
 
   // DELETE
   static Future deleteTask(int taskId) async {
-    Map<String, String> requestHeaders = {
-      'Content-type': 'application/json',
-      'Authorization': currentUser.token!
-    };
-    return await http.delete(
-      Uri.parse('${BaseUrl().avdToLocalhost}/api/task/delete/'),
-      headers: requestHeaders,
-      body: jsonEncode({
+    final client = HttpClient();
+    return await client
+        .deleteUrl(Uri.parse('$baseUrl/api/task/delete/'))
+        .then((HttpClientRequest request) async {
+      request.headers.add(
+        'Content-type',
+        'application/json',
+        preserveHeaderCase: true,
+      );
+      request.headers.add(
+        'Authorization',
+        currentUser.token.toString(),
+        preserveHeaderCase: true,
+      );
+      final body = jsonEncode({
         "id": taskId,
-      }),
-    );
+      });
+
+      request.write(body);
+      return request.close();
+    });
   }
 }
