@@ -29,21 +29,6 @@ class API {
 
   // NEW
   static Future newUser(User user) async {
-    // Map<String, String> requestHeaders = {
-    //   'Content-type': 'application/json',
-    // };
-
-    // return await http.post(
-    //   Uri.parse('$baseUrl/api/user/new/'),
-    //   headers: requestHeaders,
-    //   body: jsonEncode({
-    //     "name": user.name,
-    //     "email": user.email,
-    //     "username": user.username,
-    //     "password": user.password
-    //   }),
-    // );
-
     final client = HttpClient();
     return await client
         .postUrl(Uri.parse('$baseUrl/api/user/new/'))
