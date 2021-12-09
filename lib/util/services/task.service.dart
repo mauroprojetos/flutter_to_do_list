@@ -5,73 +5,27 @@ import 'package:to_do_list/constants/app_constants.dart';
 import 'package:to_do_list/models/task.dart';
 import 'package:to_do_list/models/user.dart';
 
-class API {
-  // LOGIN
-  static Future login(String username, String password) async {
+class TaskService {
+  static Future create(String taskname) async {
     final client = HttpClient();
     return await client
-        .postUrl(Uri.parse('$baseUrl/api/user/login/'))
+        .postUrl(Uri.parse('$baseUrl/api/task/new/'))
         .then((HttpClientRequest request) async {
       request.headers.add(
         'Content-type',
         'application/json',
         preserveHeaderCase: true,
       );
-      final body = jsonEncode({
-        'username': username,
-        'password': password,
-      });
 
-      request.write(body);
-      return request.close();
-    });
-  }
-
-  // NEW
-  static Future newUser(User user) async {
-    final client = HttpClient();
-    return await client
-        .postUrl(Uri.parse('$baseUrl/api/user/new/'))
-        .then((HttpClientRequest request) async {
-      request.headers.add(
-        'Content-type',
-        'application/json',
-        preserveHeaderCase: true,
-      );
-      final body = jsonEncode({
-        "name": user.name,
-        "email": user.email,
-        "username": user.username,
-        "password": user.password
-      });
-
-      request.write(body);
-      return request.close();
-    });
-  }
-
-  // UPDATE
-  static Future updateUser(User user) async {
-    final client = HttpClient();
-    return await client
-        .putUrl(Uri.parse('$baseUrl/api/user/update/'))
-        .then((HttpClientRequest request) async {
-      request.headers.add(
-        'Content-type',
-        'application/json',
-        preserveHeaderCase: true,
-      );
       request.headers.add(
         'Authorization',
+        // TODO: Change to flutter_secure_storage
         currentUser.token.toString(),
         preserveHeaderCase: true,
       );
+
       final body = jsonEncode({
-        "name": user.name,
-        "email": user.email,
-        "username": user.username,
-        "password": user.password,
-        "picture": user.picture,
+        "name": taskname,
       });
 
       request.write(body);
@@ -79,10 +33,7 @@ class API {
     });
   }
 
-  // --- TASKS ---
-
-  // SEARCH
-  static Future getTasks() async {
+  static Future read() async {
     final client = HttpClient();
 
     return await client
@@ -103,33 +54,7 @@ class API {
     });
   }
 
-  // NEW
-  static Future newTask(String taskname) async {
-    final client = HttpClient();
-    return await client
-        .postUrl(Uri.parse('$baseUrl/api/task/new/'))
-        .then((HttpClientRequest request) async {
-      request.headers.add(
-        'Content-type',
-        'application/json',
-        preserveHeaderCase: true,
-      );
-      request.headers.add(
-        'Authorization',
-        currentUser.token.toString(),
-        preserveHeaderCase: true,
-      );
-      final body = jsonEncode({
-        "name": taskname,
-      });
-
-      request.write(body);
-      return request.close();
-    });
-  }
-
-  // UPDATE
-  static Future updateTask(Task task) async {
+  static Future update(Task task) async {
     final client = HttpClient();
     return await client
         .putUrl(Uri.parse('$baseUrl/api/task/update/'))
@@ -155,8 +80,7 @@ class API {
     });
   }
 
-  // DELETE
-  static Future deleteTask(int taskId) async {
+  static Future delete(int taskId) async {
     final client = HttpClient();
     return await client
         .deleteUrl(Uri.parse('$baseUrl/api/task/delete/'))

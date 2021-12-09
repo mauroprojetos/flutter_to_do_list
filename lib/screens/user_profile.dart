@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/task_list.dart';
-import 'package:to_do_list/util/services/api.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:to_do_list/util/services/user.service.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({Key? key}) : super(key: key);
@@ -121,7 +121,7 @@ class _UserProfileState extends State<UserProfile> {
         picture: base64,
       );
 
-      await API.updateUser(newUserData).then((response) async {
+      await UserService.update(newUserData).then((response) async {
         var body = jsonDecode(await response.transform(utf8.decoder).join());
 
         if (response.statusCode == 200 &&

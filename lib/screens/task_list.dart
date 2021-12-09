@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/task.dart';
-import 'package:to_do_list/util/services/api.dart';
+import 'package:to_do_list/util/services/task.service.dart';
 import 'package:to_do_list/widgets/custom_drawer.dart';
 import 'package:to_do_list/widgets/edit_task_dialog.dart';
 import 'package:to_do_list/widgets/new_task_dialog.dart';
@@ -27,7 +27,7 @@ class _TaskListState extends State<TaskList> {
   _getTaskList() {
     isLoading = true;
 
-    API.getTasks().then((response) async {
+    TaskService.read().then((response) async {
       if (response.statusCode == 200) {
         var body = jsonDecode(await response.transform(utf8.decoder).join());
 

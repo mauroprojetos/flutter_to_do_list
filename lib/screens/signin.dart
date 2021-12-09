@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/signup.dart';
 import 'package:to_do_list/screens/task_list.dart';
-import 'package:to_do_list/util/services/api.dart';
+import 'package:to_do_list/util/services/user.service.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({Key? key}) : super(key: key);
@@ -42,8 +42,7 @@ class _SignInState extends State<SignIn> {
 
   _login() async {
     if (_loginFormKey.currentState!.validate()) {
-      await API
-          .login(
+      await UserService.read(
               _usernameEditingController.text, _passwordEditingController.text)
           .then((response) async {
         var body = jsonDecode(await response.transform(utf8.decoder).join());

@@ -11,6 +11,12 @@ A simple To-Do list app made in class oriented by the professor [Edson M. de Sou
 ### How to Use
 Change the baseUrl at line 1 in `lib/constants/app_constants.dart` with your API path. You can use the `main` string as default baseUrl.
 
+### Known Issues
+* [Host returning error 406](https://github.com/Wilian-N-Silva/flutter_to_do_list/issues/1)
+
+### To-Do
+* Use `flutter_secure_storage package` to store token
+
 ## Acknowledgements
 * [Edson M. de Souza](https://github.com/EdsonMSouza)
 
