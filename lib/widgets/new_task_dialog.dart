@@ -52,7 +52,10 @@ class _NewTaskDialogState extends State<NewTaskDialog> {
           controller: _newTaskName,
           focusNode: _newTaskNameFocusNode,
           autofocus: true,
-          decoration: const InputDecoration(label: Text('Título')),
+          decoration: const InputDecoration(
+            label: Text('Título'),
+            border: OutlineInputBorder(),
+          ),
           onFieldSubmitted: (_) => _createTask(),
           validator: (value) {
             if (value == null || value.isEmpty) {

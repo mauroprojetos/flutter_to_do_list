@@ -105,7 +105,7 @@ class _TaskListState extends State<TaskList> {
                   },
                 );
 
-                if (result) {
+                if (result != null && result) {
                   _getTaskList();
                 }
               },

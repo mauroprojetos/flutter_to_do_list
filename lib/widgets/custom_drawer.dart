@@ -5,8 +5,26 @@ import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/signin.dart';
 import 'package:to_do_list/screens/user_profile.dart';
 
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   const CustomDrawer({Key? key}) : super(key: key);
+
+  @override
+  _CustomDrawerState createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends State<CustomDrawer> {
+  late User userData;
+
+  @override
+  void initState() {
+    userData = currentUser;
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,21 +32,21 @@ class CustomDrawer extends StatelessWidget {
       child: Column(
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(currentUser.name!),
-            accountEmail: Text(currentUser.email!),
+            accountName: Text(userData.name!),
+            accountEmail: Text(userData.email!),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
-              child: currentUser.picture != null
+              child: userData.picture != null
                   ? ClipOval(
-                      // child: imageFromBase64String(currentUser.picture!),
+                      // child: imageFromBase64String(userData.picture!),
                       child: Image.memory(
-                      base64Decode(currentUser.picture!.toString()),
+                      base64Decode(userData.picture!.toString()),
                       height: 150.0,
                       width: 150.0,
                       fit: BoxFit.cover,
                     ))
                   : Text(
-                      currentUser.name![0].toUpperCase(),
+                      userData.name![0].toUpperCase(),
                       style: const TextStyle(fontSize: 32.0),
                     ),
               radius: 50.0,

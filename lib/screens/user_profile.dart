@@ -3,10 +3,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
+import 'package:to_do_list/screens/signin.dart';
 import 'package:to_do_list/screens/task_list.dart';
 import 'package:to_do_list/util/services/api.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:to_do_list/widgets/delete_account_dialog.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({Key? key}) : super(key: key);
@@ -158,6 +160,7 @@ class _UserProfileState extends State<UserProfile> {
 
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil'),
@@ -174,144 +177,319 @@ class _UserProfileState extends State<UserProfile> {
         ],
       ),
       body: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
         child: Container(
-          color: Colors.white,
           padding: const EdgeInsets.all(16.0),
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: Form(
-            key: _userEditFormKey,
-            child: Column(
-              children: [
-                Center(
-                  child: GestureDetector(
-                    child: Container(
-                      height: 150,
-                      width: 150,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      child: currentUser.picture == null
-                          ? _imageFile != null
-                              ? Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      child: Image.file(
-                                        File(_imageFile!.path),
-                                        height: 150.0,
-                                        width: 150.0,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      bottom: 0,
-                                      left: 102,
-                                      child: Container(
-                                        height: 48.0,
-                                        width: 48.0,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).primaryColor,
-                                          shape: BoxShape.rectangle,
-                                          borderRadius:
-                                              BorderRadius.circular(20.0),
-                                        ),
-                                        child: const Icon(
-                                          Icons.photo,
-                                          size: 32.0,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                )
-                              : Icon(
-                                  Icons.add_a_photo,
-                                  size: 64.0,
-                                  color: Theme.of(context).primaryColor,
-                                )
-                          : Stack(
-                              children: [
-                                ClipRRect(
+          height: screenHeight,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Form(
+                      key: _userEditFormKey,
+                      child: Column(
+                        children: [
+                          Center(
+                            child: GestureDetector(
+                              child: Container(
+                                height: 150,
+                                width: 150,
+                                decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(20.0),
-                                  child: Image.memory(
-                                    base64Decode(
-                                      currentUser.picture!.toString(),
-                                    ),
-                                    height: 150.0,
-                                    width: 150.0,
-                                    fit: BoxFit.cover,
-                                  ),
                                 ),
-                                Positioned(
-                                  bottom: 0,
-                                  left: 102,
-                                  child: Container(
-                                    height: 48.0,
-                                    width: 48.0,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor,
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: BorderRadius.circular(20.0),
-                                    ),
-                                    child: const Icon(
-                                      Icons.photo,
-                                      size: 32.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )
-                              ],
+                                child: currentUser.picture == null
+                                    ? _imageFile != null
+                                        ? Stack(
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(20.0),
+                                                child: Image.file(
+                                                  File(_imageFile!.path),
+                                                  height: 150.0,
+                                                  width: 150.0,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              Positioned(
+                                                bottom: 0,
+                                                left: 102,
+                                                child: Container(
+                                                  height: 48.0,
+                                                  width: 48.0,
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .primaryColor,
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20.0),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.photo,
+                                                    size: 32.0,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          )
+                                        : Icon(
+                                            Icons.add_a_photo,
+                                            size: 64.0,
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                          )
+                                    : Stack(
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
+                                            child: Image.memory(
+                                              base64Decode(
+                                                currentUser.picture!.toString(),
+                                              ),
+                                              height: 150.0,
+                                              width: 150.0,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            bottom: 0,
+                                            left: 102,
+                                            child: Container(
+                                              height: 48.0,
+                                              width: 48.0,
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .primaryColor,
+                                                shape: BoxShape.rectangle,
+                                                borderRadius:
+                                                    BorderRadius.circular(20.0),
+                                              ),
+                                              child: const Icon(
+                                                Icons.photo,
+                                                size: 32.0,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                              ),
+                              onTap: () {
+                                imagePickerModal();
+                              },
                             ),
+                          ),
+                          const SizedBox(
+                            height: 16.0,
+                          ),
+                          TextFormField(
+                            controller: _name,
+                            decoration: const InputDecoration(
+                              label: Text('Nome'),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.name,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Preencha o campo "Nome"';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(
+                            height: 16.0,
+                          ),
+                          TextFormField(
+                            controller: _email,
+                            readOnly: true,
+                            decoration: const InputDecoration(
+                              label: Text('E-mail (Somente leitura)'),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Preencha o campo "E-mail"';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    onTap: () {
-                      imagePickerModal();
+                    const SizedBox(
+                      height: 32.0,
+                    ),
+                    TextButton(
+                      child: const Text('Alterar Senha'),
+                      onPressed: () async {
+                        await showDialog(
+                          context: context,
+                          builder: (_) => const ChangeAccountPasswordDialog(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: screenHeight / 3.5,
+                child: Center(
+                  child: TextButton(
+                    style: ButtonStyle(
+                      overlayColor: MaterialStateColor.resolveWith(
+                        (states) => Colors.red.shade100,
+                      ),
+                    ),
+                    child: const Text(
+                      'Excluir Conta',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
+                    onPressed: () async {
+                      final result = await showDialog(
+                        context: context,
+                        builder: (_) => const DeleteAccountDialog(),
+                      );
+
+                      if (result != null && result) {
+                        currentUser = User();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignIn(),
+                          ),
+                        );
+                      }
                     },
                   ),
                 ),
-                const SizedBox(
-                  height: 16.0,
-                ),
-                TextFormField(
-                  controller: _name,
-                  decoration: const InputDecoration(
-                    label: Text('Nome'),
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.name,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Preencha o campo "Nome"';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 16.0,
-                ),
-                TextFormField(
-                  controller: _email,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    label: Text('E-mail (Somente leitura)'),
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Preencha o campo "E-mail"';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 32.0,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class ChangeAccountPasswordDialog extends StatefulWidget {
+  const ChangeAccountPasswordDialog({Key? key}) : super(key: key);
+
+  @override
+  _ChangeAccountPasswordDialogState createState() =>
+      _ChangeAccountPasswordDialogState();
+}
+
+class _ChangeAccountPasswordDialogState
+    extends State<ChangeAccountPasswordDialog> {
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _repeatNewPasswordController =
+      TextEditingController();
+
+  final _updatePasswordFormKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  _updatePassword() {
+    if (_updatePasswordFormKey.currentState!.validate()) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: const Text('Em construção'),
+      // content: Form(
+      //   key: _updatePasswordFormKey,
+      //   child: Column(
+      //     mainAxisSize: MainAxisSize.min,
+      //     children: [
+      //       TextFormField(
+      //         controller: _currentPasswordController,
+      //         decoration: const InputDecoration(
+      //           label: Text('Senha Atual'),
+      //           border: OutlineInputBorder(),
+      //         ),
+      //         validator: (value) {
+      //           if (value == null || value.isEmpty) {
+      //             return 'Preencha o campo "Senha Atual"';
+      //           }
+      //           return null;
+      //         },
+      //       ),
+      //       const SizedBox(
+      //         height: 16.0,
+      //       ),
+      //       TextFormField(
+      //         controller: _newPasswordController,
+      //         decoration: const InputDecoration(
+      //           label: Text('Nova Senha'),
+      //           border: OutlineInputBorder(),
+      //         ),
+      //         validator: (value) {
+      //           if (value == null || value.isEmpty) {
+      //             return 'Preencha o campo "Nova Senha"';
+      //           }
+      //           return null;
+      //         },
+      //       ),
+      //       const SizedBox(
+      //         height: 16.0,
+      //       ),
+      //       TextFormField(
+      //         controller: _repeatNewPasswordController,
+      //         decoration: const InputDecoration(
+      //           label: Text('Repetir Nova Senha'),
+      //           border: OutlineInputBorder(),
+      //         ),
+      //         validator: (value) {
+      //           if (value == null || value.isEmpty) {
+      //             return 'Preencha o campo "Senha Atual"';
+      //           }
+      //           if (value != _repeatNewPasswordController.value.toString()) {
+      //             return 'As senhas não coincidem';
+      //           }
+      //           return null;
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
+      actionsAlignment: MainAxisAlignment.spaceAround,
+      actions: [
+        TextButton(
+          child: const Text(
+            'Cancelar',
+            style: TextStyle(
+              color: Colors.red,
+            ),
+          ),
+          style: ButtonStyle(
+            overlayColor: MaterialStateColor.resolveWith(
+              (states) => Colors.red.shade100,
+            ),
+          ),
+          onPressed: () {
+            Navigator.pop(context, false);
+          },
+        ),
+        TextButton(
+            child: const Text('Alterar'),
+            onPressed: () {
+              // _updatePassword();
+            }),
+      ],
     );
   }
 }

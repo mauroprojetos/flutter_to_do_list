@@ -1,6 +1,7 @@
 final baseUrl = URI().main;
 
 class URI {
+  // SERVER
   final String main = 'PATH_TO_API';
 
   // LOCALHOST USING Android Virtual Device
