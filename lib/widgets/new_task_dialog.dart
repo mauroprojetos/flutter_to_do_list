@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:to_do_list/util/services/task.service.dart';
+import 'package:to_do_list/util/services/tasks.service.dart';
 
 class NewTaskDialog extends StatefulWidget {
   const NewTaskDialog({Key? key}) : super(key: key);
@@ -17,7 +17,8 @@ class _NewTaskDialogState extends State<NewTaskDialog> {
 
   _createTask() async {
     if (_newTaskFormKey.currentState!.validate()) {
-      HttpClientResponse response = await TaskService.create(_newTaskName.text);
+      HttpClientResponse response =
+          await TasksService.newTask(_newTaskName.text);
 
       if (response.statusCode == 200) {
         Navigator.pop(context, true);
@@ -52,7 +53,10 @@ class _NewTaskDialogState extends State<NewTaskDialog> {
           controller: _newTaskName,
           focusNode: _newTaskNameFocusNode,
           autofocus: true,
-          decoration: const InputDecoration(label: Text('Título')),
+          decoration: const InputDecoration(
+            label: Text('Título'),
+            border: OutlineInputBorder(),
+          ),
           onFieldSubmitted: (_) => _createTask(),
           validator: (value) {
             if (value == null || value.isEmpty) {

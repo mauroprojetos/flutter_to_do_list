@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/signin.dart';
-import 'package:to_do_list/util/services/user.service.dart';
+import 'package:to_do_list/util/services/users.service.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);

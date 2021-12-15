@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/signup.dart';
 import 'package:to_do_list/screens/task_list.dart';
-import 'package:to_do_list/util/services/user.service.dart';
+import 'package:to_do_list/util/services/users.service.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({Key? key}) : super(key: key);
@@ -15,8 +15,8 @@ class SignIn extends StatefulWidget {
 
 class _SignInState extends State<SignIn> {
   final _loginFormKey = GlobalKey<FormState>();
-  late TextEditingController _usernameEditingController;
-  late TextEditingController _passwordEditingController;
+  late TextEditingController _username;
+  late TextEditingController _password;
   late FocusNode _usernameFocusNode;
   late FocusNode _passwordFocusNode;
 
@@ -24,16 +24,16 @@ class _SignInState extends State<SignIn> {
   void initState() {
     super.initState();
 
-    _usernameEditingController = TextEditingController();
-    _passwordEditingController = TextEditingController();
+    _username = TextEditingController();
+    _password = TextEditingController();
     _usernameFocusNode = FocusNode();
     _passwordFocusNode = FocusNode();
   }
 
   @override
   void dispose() {
-    _usernameEditingController.dispose();
-    _passwordEditingController.dispose();
+    _username.dispose();
+    _password.dispose();
     _usernameFocusNode.dispose();
     _passwordFocusNode.dispose();
 
@@ -42,15 +42,14 @@ class _SignInState extends State<SignIn> {
 
   _login() async {
     if (_loginFormKey.currentState!.validate()) {
-      await UserService.read(
-              _usernameEditingController.text, _passwordEditingController.text)
+      await UserService.read(_username.text, _password.text)
           .then((response) async {
         var body = jsonDecode(await response.transform(utf8.decoder).join());
         if (response.statusCode == 200) {
           if (body['message'] == null) {
             currentUser = User.fromJson(body);
-            currentUser.username = _usernameEditingController.text;
-            currentUser.password = _passwordEditingController.text;
+            currentUser.username = _username.text;
+            currentUser.password = _password.text;
 
             Navigator.pushReplacement(
               context,
@@ -103,7 +102,7 @@ class _SignInState extends State<SignIn> {
                 child: Column(
                   children: [
                     TextFormField(
-                      controller: _usernameEditingController,
+                      controller: _username,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         label: Text('Usuário'),
@@ -124,7 +123,7 @@ class _SignInState extends State<SignIn> {
                       height: 16.0,
                     ),
                     TextFormField(
-                      controller: _passwordEditingController,
+                      controller: _password,
                       focusNode: _passwordFocusNode,
                       decoration: const InputDecoration(
                         label: Text('Senha'),
