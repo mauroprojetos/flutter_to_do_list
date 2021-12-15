@@ -1,4 +1,4 @@
-final baseUrl = URI().devAVD;
+final baseUrl = URI().main;
 
 class URI {
   // SERVER
