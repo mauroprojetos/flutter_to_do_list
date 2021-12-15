@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
-import 'package:to_do_list/util/services/user.service.dart';
+import 'package:to_do_list/util/services/users.service.dart';
 
 class DeleteAccountDialog extends StatefulWidget {
   const DeleteAccountDialog({Key? key}) : super(key: key);

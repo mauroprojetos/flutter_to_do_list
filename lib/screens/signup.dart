@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/signin.dart';
-import 'package:to_do_list/util/services/api.dart';
+import 'package:to_do_list/util/services/users.service.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -28,7 +28,7 @@ class _SignUpState extends State<SignUp> {
         password: _password.text,
       );
 
-      await API.newUser(newUser).then((response) async {
+      await UserService.create(newUser).then((response) async {
         if (response.statusCode == 200) {
           var body = jsonDecode(await response.transform(utf8.decoder).join());
 

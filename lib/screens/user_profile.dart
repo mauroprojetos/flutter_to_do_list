@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:to_do_list/models/user.dart';
 import 'package:to_do_list/screens/signin.dart';
 import 'package:to_do_list/screens/task_list.dart';
-import 'package:to_do_list/util/services/api.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:to_do_list/util/services/users.service.dart';
 import 'package:to_do_list/widgets/delete_account_dialog.dart';
+import 'package:to_do_list/widgets/update_user_password_dialog.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({Key? key}) : super(key: key);
@@ -123,7 +124,7 @@ class _UserProfileState extends State<UserProfile> {
         picture: base64,
       );
 
-      await API.updateUser(newUserData).then((response) async {
+      await UserService.update(newUserData).then((response) async {
         var body = jsonDecode(await response.transform(utf8.decoder).join());
 
         if (response.statusCode == 200 &&
@@ -326,12 +327,19 @@ class _UserProfileState extends State<UserProfile> {
                       height: 32.0,
                     ),
                     TextButton(
-                      child: const Text('Alterar Senha'),
+                      child: const Text('Alterar Usuário / Senha'),
                       onPressed: () async {
-                        await showDialog(
+                        final result = await showDialog(
                           context: context,
-                          builder: (_) => const ChangeAccountPasswordDialog(),
+                          builder: (_) => const UpdateAuthDialog(),
                         );
+
+                        if (result != null && result != false) {
+                          setState(() {
+                            currentUser.username = result[0];
+                            currentUser.password = result[1];
+                          });
+                        }
                       },
                     ),
                   ],
@@ -375,121 +383,6 @@ class _UserProfileState extends State<UserProfile> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class ChangeAccountPasswordDialog extends StatefulWidget {
-  const ChangeAccountPasswordDialog({Key? key}) : super(key: key);
-
-  @override
-  _ChangeAccountPasswordDialogState createState() =>
-      _ChangeAccountPasswordDialogState();
-}
-
-class _ChangeAccountPasswordDialogState
-    extends State<ChangeAccountPasswordDialog> {
-  final TextEditingController _currentPasswordController =
-      TextEditingController();
-  final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _repeatNewPasswordController =
-      TextEditingController();
-
-  final _updatePasswordFormKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  _updatePassword() {
-    if (_updatePasswordFormKey.currentState!.validate()) {}
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      content: const Text('Em construção'),
-      // content: Form(
-      //   key: _updatePasswordFormKey,
-      //   child: Column(
-      //     mainAxisSize: MainAxisSize.min,
-      //     children: [
-      //       TextFormField(
-      //         controller: _currentPasswordController,
-      //         decoration: const InputDecoration(
-      //           label: Text('Senha Atual'),
-      //           border: OutlineInputBorder(),
-      //         ),
-      //         validator: (value) {
-      //           if (value == null || value.isEmpty) {
-      //             return 'Preencha o campo "Senha Atual"';
-      //           }
-      //           return null;
-      //         },
-      //       ),
-      //       const SizedBox(
-      //         height: 16.0,
-      //       ),
-      //       TextFormField(
-      //         controller: _newPasswordController,
-      //         decoration: const InputDecoration(
-      //           label: Text('Nova Senha'),
-      //           border: OutlineInputBorder(),
-      //         ),
-      //         validator: (value) {
-      //           if (value == null || value.isEmpty) {
-      //             return 'Preencha o campo "Nova Senha"';
-      //           }
-      //           return null;
-      //         },
-      //       ),
-      //       const SizedBox(
-      //         height: 16.0,
-      //       ),
-      //       TextFormField(
-      //         controller: _repeatNewPasswordController,
-      //         decoration: const InputDecoration(
-      //           label: Text('Repetir Nova Senha'),
-      //           border: OutlineInputBorder(),
-      //         ),
-      //         validator: (value) {
-      //           if (value == null || value.isEmpty) {
-      //             return 'Preencha o campo "Senha Atual"';
-      //           }
-      //           if (value != _repeatNewPasswordController.value.toString()) {
-      //             return 'As senhas não coincidem';
-      //           }
-      //           return null;
-      //         },
-      //       ),
-      //     ],
-      //   ),
-      // ),
-      actionsAlignment: MainAxisAlignment.spaceAround,
-      actions: [
-        TextButton(
-          child: const Text(
-            'Cancelar',
-            style: TextStyle(
-              color: Colors.red,
-            ),
-          ),
-          style: ButtonStyle(
-            overlayColor: MaterialStateColor.resolveWith(
-              (states) => Colors.red.shade100,
-            ),
-          ),
-          onPressed: () {
-            Navigator.pop(context, false);
-          },
-        ),
-        TextButton(
-            child: const Text('Alterar'),
-            onPressed: () {
-              // _updatePassword();
-            }),
-      ],
     );
   }
 }

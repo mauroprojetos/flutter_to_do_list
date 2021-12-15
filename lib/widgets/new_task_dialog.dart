@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:to_do_list/util/services/api.dart';
+import 'package:to_do_list/util/services/tasks.service.dart';
 
 class NewTaskDialog extends StatefulWidget {
   const NewTaskDialog({Key? key}) : super(key: key);
@@ -17,7 +17,8 @@ class _NewTaskDialogState extends State<NewTaskDialog> {
 
   _createTask() async {
     if (_newTaskFormKey.currentState!.validate()) {
-      HttpClientResponse response = await API.newTask(_newTaskName.text);
+      HttpClientResponse response =
+          await TasksService.newTask(_newTaskName.text);
 
       if (response.statusCode == 200) {
         Navigator.pop(context, true);

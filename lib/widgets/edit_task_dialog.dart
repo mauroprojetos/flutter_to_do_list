@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:to_do_list/models/task.dart';
-import 'package:to_do_list/util/services/api.dart';
+import 'package:to_do_list/util/services/tasks.service.dart';
 
 class EditTaskDialog extends StatefulWidget {
   const EditTaskDialog({Key? key, required this.task}) : super(key: key);
@@ -28,7 +28,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
         date: task.date,
         realized: isCompleted ? 1 : 0,
       );
-      final response = await API.updateTask(newData);
+      final response = await TasksService.updateTask(newData);
       if (response.statusCode == 200) {
         _taskName.clear();
         Navigator.pop(context, true);
@@ -92,7 +92,7 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
             style: TextStyle(color: Colors.red),
           ),
           onPressed: () async {
-            await API.deleteTask(task.id).then((response) async {
+            await TasksService.deleteTask(task.id).then((response) async {
               var body =
                   jsonDecode(await response.transform(utf8.decoder).join());
 
